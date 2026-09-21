@@ -1,11 +1,24 @@
 package com.thorben.janssen.model;
 
+import com.thorben.janssen.persistence.ClubName;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@SqlResultSetMapping(
+        name = "clubNameMapping",
+        classes = {
+                @ConstructorResult(
+                        targetClass = ClubName.class,
+                        columns = {
+                                @ColumnResult(name = "id"),
+                                @ColumnResult(name = "name")
+                        }
+                )
+        }
+)
 public class ChessClub {
 
     @Id

@@ -2,7 +2,9 @@ package com.thorben.janssen;
 
 import com.thorben.janssen.data.ChessPlayerStatefulRepository;
 import com.thorben.janssen.data._ChessPlayerRepository;
+import com.thorben.janssen.model.ChessClub;
 import com.thorben.janssen.model.ChessPlayer;
+import com.thorben.janssen.model.ChessPlayer_;
 import com.thorben.janssen.model._ChessPlayer;
 import com.thorben.janssen.persistence.ChessClubQueries_;
 import com.thorben.janssen.data.ChessPlayerRepository;
@@ -10,11 +12,13 @@ import com.thorben.janssen.persistence.ClubName;
 import jakarta.data.Order;
 import jakarta.data.restrict.Restrict;
 import jakarta.data.restrict.Restriction;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.sql.ResultSetMapping;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hibernate.FetchMethod;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -170,6 +174,66 @@ public class TestPersistence {
 
 		var players = playerRepo.getPlayerNames();
 		players.forEach(player -> log.info(player));
+	}
+
+	/**
+	 * Hibernate 8
+	 */
+
+	@Test
+	public void testSubselectFetching() {
+		log.info("... testSubselectFetching ...");
+
+		var entityManager = emf.createEntityManager();
+		entityManager.getTransaction().begin();
+
+		EntityGraph<ChessPlayer> graph =
+				entityManager.createEntityGraph(ChessPlayer.class);
+		graph.addAttributeNode(ChessPlayer_.club)
+				.addOption(FetchMethod.BY_SUBQUERY)
+		;
+
+		var players = entityManager
+				.createQuery("""
+                    SELECT p
+                    FROM ChessPlayer p
+                    ORDER BY p.id
+                    """, ChessPlayer.class)
+				.setHint("jakarta.persistence.fetchgraph", graph)
+				.getResultList();
+
+		players.forEach(player -> log.info("{} {} plays for {}", player.getFirstName(), player.getLastName(), player.getClub().getName()));
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+	}
+
+	@Test
+	public void testBidirectionalManagement() {
+		log.info("... testBidirectionalManagement ...");
+
+		var entityManager = emf.createEntityManager();
+		entityManager.getTransaction().begin();
+
+		var club = entityManager.find(ChessClub.class, 1L);
+		log.info("{} has {} players.", club.getName(), club.getPlayers().size());
+
+		var newPlayer = new ChessPlayer();
+		newPlayer.setFirstName("Thorben");
+		newPlayer.setLastName("Janssen");
+		newPlayer.setClub(club);
+		entityManager.persist(newPlayer);
+
+//		club.getPlayers().add(newPlayer);
+//		entityManager.flush();
+		log.info("Before commit");
+		log.info("{} has {} players.", club.getName(), club.getPlayers().size());
+
+		entityManager.getTransaction().commit();
+		entityManager.close();
+
+		log.info("After commit");
+		log.info("{} has {} players.", club.getName(), club.getPlayers().size());
 	}
 
 //	/**

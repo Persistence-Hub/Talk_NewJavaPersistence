@@ -1,21 +1,9 @@
 package com.thorben.janssen.model;
 
 import jakarta.persistence.*;
-//import org.hibernate.annotations.Audited;
-//import org.hibernate.annotations.Immutable;
-//import org.hibernate.annotations.Audited;
-//import org.hibernate.annotations.Temporal;
 
 @Entity
-//@Cacheable
-
-//@Temporal
-//@Temporal.HistoryTable(name = "ChessPlayer_HIST")
-//@Audited
-//@Audited.Table(name = "ChessPlayer_Audit")
-
 @NamedQuery(name = "findPlayersByFirstName", query = "SELECT p FROM ChessPlayer p WHERE p.firstName = :firstName")
-//@Immutable
 public class ChessPlayer {
     
     @Id
