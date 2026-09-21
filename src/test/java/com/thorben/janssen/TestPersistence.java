@@ -202,7 +202,7 @@ public class TestPersistence {
 				.setHint("jakarta.persistence.fetchgraph", graph)
 				.getResultList();
 
-		players.forEach(player -> log.info("{} {} plays for {}", player.getFirstName(), player.getLastName(), player.getClub().getName()));
+		players.forEach(player -> log.info("{} {} plays for {}", player.getFirstName(), player.getLastName(), player.getClub() != null ? player.getClub().getName() : ""));
 
 		entityManager.getTransaction().commit();
 		entityManager.close();
